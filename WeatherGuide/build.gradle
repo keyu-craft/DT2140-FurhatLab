@@ -1,0 +1,45 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '2.4.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.4.10'
+    id 'com.gradleup.shadow' version '9.5.1'
+
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://s3-eu-west-1.amazonaws.com/furhat-maven/releases" }
+    maven { url "https://repo.gradle.org/gradle/libs-releases" }
+    maven { url "https://repo1.maven.org/maven2/" }
+}
+
+dependencies {
+    implementation 'com.furhatrobotics.furhatos:furhat-skill-api:3.0.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0'
+}
+
+Properties properties = new Properties()
+properties.load(project.file('skill.properties').newDataInputStream())
+version = properties.getProperty('version')
+def skillName = properties.getProperty('name')
+
+shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    archiveBaseName.set(skillName)
+    archiveVersion.set(project.version.toString())
+    archiveClassifier.set("")
+    archiveExtension.set('skill')
+    manifest {
+        attributes 'Main-Class': 'furhatos.skills.Skill'
+    }
+    from "skill.properties"
+    from "assets"
+    exclude("**/Log4j2Plugins.dat", "**/node_modules")
+    mergeServiceFiles()
+}
